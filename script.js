@@ -29,13 +29,23 @@ const canonicalQueryString = params
 }).join("&")
 
 // —— 4. 计算 payloadHash —— 
-// GET/HEAD 空体：SHA256("")；如有 body，可按之前示例动态处理
-const payloadHash = CryptoJS.SHA256("").toString(CryptoJS.enc.Hex);
+let payloadHash;
+if (pm.request.body && pm.request.body.mode === 'raw') {
+  // raw 模式，计算实际 body 的 SHA256
+  const body = pm.request.body.raw;
+  payloadHash = CryptoJS.SHA256(body).toString(CryptoJS.enc.Hex);
+} else if (method === 'PUT') {
+  // file/formdata 上传场景，无法取内容时用 UNSIGNED-PAYLOAD
+  payloadHash = 'UNSIGNED-PAYLOAD';
+} else {
+  // GET/HEAD/其他无 body 场景
+  payloadHash = CryptoJS.SHA256("").toString(CryptoJS.enc.Hex);
+}
 
 // —— 5. 插入签名前必要的 Header —— 
 pm.request.headers.upsert({ key: "x-tos-date",           value: amzDate });
 pm.request.headers.upsert({ key: "x-tos-content-sha256", value: payloadHash });
-pm.request.headers.upsert({ key: "host",                 value: host });  // 避免有时没自动加
+pm.request.headers.upsert({ key: "host",                 value: host });
 
 // —— 6. 构造 Canonical Request —— 
 const canonicalHeaders =
@@ -51,17 +61,6 @@ const canonicalRequest = [
   canonicalHeaders,
   signedHeaders,
   payloadHash
-].join("\n");
-
-// —— 7. 构造 StringToSign —— 
-const algorithm       = "TOS4-HMAC-SHA256";
-const credentialScope = `${dateStamp}/${region}/${service}/request`;
-const hashCR          = CryptoJS.SHA256(canonicalRequest).toString(CryptoJS.enc.Hex);
-const stringToSign    = [
-  algorithm,
-  amzDate,
-  credentialScope,
-  hashCR
 ].join("\n");
 
 // —— 8. 派生签名密钥 & 计算签名 —— 
