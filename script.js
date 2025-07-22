@@ -63,6 +63,18 @@ const canonicalRequest = [
   payloadHash
 ].join("\n");
 
+
+// —— 7. 构造 StringToSign —— 
+const algorithm       = "TOS4-HMAC-SHA256";
+const credentialScope = `${dateStamp}/${region}/${service}/request`;
+const hashCR          = CryptoJS.SHA256(canonicalRequest).toString(CryptoJS.enc.Hex);
+const stringToSign    = [
+  algorithm,
+  amzDate,
+  credentialScope,
+  hashCR
+].join("\n");
+
 // —— 8. 派生签名密钥 & 计算签名 —— 
 const kDate    = CryptoJS.HmacSHA256(dateStamp,     secretKey);
 const kRegion  = CryptoJS.HmacSHA256(region,        kDate);
