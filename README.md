@@ -15,15 +15,15 @@
 
 
 ## Alert
-* For a POST request, like aigc, JSON should choose [body]-[raw]-[json]
-* If would like to upload a file (PutObject), choose [body]-[binary]
+* For a POST request, like  `/?x-tos-process=aigc`, JSON should choose [body]-[raw]-[json]
+* If would like to upload a file ,like `PutObject`, choose [body]-[binary]
 
 
 ## Notice
 1. This postman script is only for VolcEngine TOS
 2. TOS presign is different than VolcEngine default presign
 
-------
+-----
 
 # 适用于火山引擎 TOS 对象存储 的非官方 pre-request 签名脚本
 
@@ -50,7 +50,7 @@
 2. TOS 签名与火山引擎默认签名方式不同
 
 
-------
+-----
 
 ## Image demo
 
@@ -61,5 +61,4 @@
 * create a request and binding the Env
 * paste script.js into  [Script] - [Pre-request]
 ![image](./doc/img/2.png)
-
 
