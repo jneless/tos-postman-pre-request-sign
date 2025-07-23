@@ -138,7 +138,7 @@
 | DeleteObject | ✅ |
 | DeleteMultiObjects | x |
 | GetObject | ✅ |
-| HeadObject | v |
+| HeadObject | ✅ |
 | AppendObject | x |
 | PutObject | ✅ |
 | PostObject | x |
