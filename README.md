@@ -62,7 +62,110 @@
 * paste script.js into  [Script] - [Pre-request]
 ![image](./doc/img/2.png)
 
+
 -----
+
+## Test
+| Bucket | Process |
+| --- | --- |
+| CreateBucket | x |
+| DeleteBucket | x |
+| HeadBucket | ✅ |
+| ListBuckets | ✅ |
+| ListObjects | ✅ |
+| ListObjectsV2 | ✅ |
+| ListObjectVersions | x |
+| PutBucketStorageClass | x |
+| GetBucketLocation | x |
+| GetBucketlnfo | ✅ |
+| PutBucketLifecycle | x |
+| GetBucketLifecycle | ✅ |
+| DeleteBucketLifecycle | x |
+| PutBucketAccessMonitor | x |
+| GetBucketAccessMonitor | x |
+| PutBucketACL | x |
+| GetBucketACL | x |
+| PutBucketCORS | x |
+| GetBucketCORS | x |
+| DeleteBucketCORS | x |
+| PutBucketlnventory | x |
+| GetBucketInventory | x |
+| ListBucketInventory | x |
+| DeleteBucketInventory | x |
+| PutBucketPolicy | x |
+| GetBucketPolicy | x |
+| DeleteBucketPolicy | x |
+| PutBucketMirrorBack | x |
+| GetBucketMirrorBack | x |
+| DeleteBucketMirrorBack | x |
+| PutBucketReplication | x |
+| GetBucketReplication | x |
+| DeleteBucketReplication | x |
+| PutBucketVersioning | x |
+| GetBucketVersioning | x |
+| PutBucketWebsite | x |
+| GetBucketWebsite | x |
+| DeleteBucketWebsite | x |
+| PutBucketNotification | x |
+| GetBucketNotification | x |
+| PutBucketNotificationV2 | x |
+| GetBucketNotificationV2 | x |
+| PutBucketCustom Domain | x |
+| GetBucketCustom Domain | x |
+| DeleteBucketCustom Domain | x |
+| PutBucketEncryption | x |
+| GetBucketEncryption | x |
+| DeleteBucketEncryption | x |
+| PutBucketTagging | x |
+| GetBucketTagging | x |
+| DeleteBucketTagging | x |
+| PutBucketRename | x |
+| GetBucketRename | x |
+| DeleteBucketRename | x |
+| PutBucket TransferAccelerat | x |
+| GetBucket TransferAccelerat | x |
+| Pm3u8 | x |
+| PutBucketLogging | x |
+| GetBucketLogging | x |
+| TextTolmage | ✅ |
+| ImageTolmage | x |
+| PutBucketRequestPayment | x |
+| GetBucketRequestPayment | x |
+
+| Objects | Process |
+| --- | --- |
+| CopyObject | x |
+| DeleteObject | ✅ |
+| DeleteMultiObjects | x |
+| GetObject | ✅ |
+| HeadObject | v |
+| AppendObject | x |
+| PutObject | ✅ |
+| PostObject | x |
+| SetObjectMeta | x |
+| RestoreObject | x |
+| RenameObject | x |
+| PutObjectACL | x |
+| GetObjectACL | x |
+| PutObjectTagging | x |
+| GetObject Tagging | x |
+| Delete Object Tagging | x |
+| FetchObject | x |
+| PutFetchTask | x |
+| GetFetchTask | x |
+| PutSymlink | x |
+| GetSymlink | x |
+
+
+| Part | Process |
+| --- | --- |
+| Create MultipartUpload | x |
+| UploadPart | x |
+| Complete MultipartUpload | x |
+| AbortMultipartUpload | x |
+| UploadPartCopy | x |
+| ListMultipartUploads | x |
+| ListParts | x |
 
 ## Appendix
 * TOS Sign in Header https://www.volcengine.com/docs/6349/74839
