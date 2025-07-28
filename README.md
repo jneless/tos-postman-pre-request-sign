@@ -128,7 +128,7 @@
 | PutBucketLogging | x |
 | GetBucketLogging | x |
 | TextTolmage | ✅ |
-| ImageTolmage | x |
+| ImageTolmage | ✅ |
 | PutBucketRequestPayment | x |
 | GetBucketRequestPayment | x |
 
