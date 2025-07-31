@@ -170,6 +170,13 @@
 | Data Process | api |
 | --- | --- |
 | ?job_type=VideoSnapshots&media_jobs | ✅ |
+| ?x-tos-process=image/info | ✅ |
+| ?x-tos-process=image/crop | ✅ |
+| ?x-tos-process=image/resize | ✅ |
+| ?x-tos-process=video/info | ✅ |
+| ?x-tos-async-process (x-tos-async-process=audio/convert) | ✅ |
+| ?x-tos-process=video/snapshot | ✅ |
+
 
 | qiniu | api |
 | --- | --- |
