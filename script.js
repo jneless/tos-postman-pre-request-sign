@@ -48,12 +48,34 @@ pm.request.headers.upsert({ key: "x-tos-content-sha256", value: payloadHash });
 pm.request.headers.upsert({ key: "host",                 value: host });
 
 // —— 6. 构造 Canonical Request —— 
-const canonicalHeaders =
-  `host:${host}\n` +
-  `x-tos-content-sha256:${payloadHash}\n` +
-  `x-tos-date:${amzDate}\n`;
-const signedHeaders = "host;x-tos-content-sha256;x-tos-date";
+// 1) Gather all enabled headers whose names need signing
+let headersToSign = pm.request.headers
+  .all()
+  .filter(h => !h.disabled)
+  .filter(h => {
+    let name = h.key.toLowerCase();
+    // always include host / date / content-sha256
+    if (["host","x-tos-date","x-tos-content-sha256"].includes(name)) return true;
+    // include any custom x-tos-meta-* headers
+    return name.startsWith("x-tos-meta-");
+  });
 
+// 2) Sort by header name
+headersToSign.sort((a,b) => 
+  a.key.toLowerCase().localeCompare(b.key.toLowerCase())
+);
+
+// 3) Build the canonical headers string
+const canonicalHeaders = headersToSign
+  .map(h => `${h.key.toLowerCase()}:${h.value.trim()}\n`)
+  .join("");
+
+// 4) Build the signed headers list
+const signedHeaders = headersToSign
+  .map(h => h.key.toLowerCase())
+  .join(";");
+
+// 5) Assemble the canonical request
 const canonicalRequest = [
   method,
   canonicalUri,
