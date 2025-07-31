@@ -142,7 +142,7 @@
 | AppendObject | x |
 | PutObject | ✅ |
 | PostObject | x |
-| SetObjectMeta | x |
+| SetObjectMeta | ✅ |
 | RestoreObject | x |
 | RenameObject | x |
 | PutObjectACL | x |
