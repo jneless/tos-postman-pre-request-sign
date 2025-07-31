@@ -167,6 +167,17 @@
 | ListMultipartUploads | x |
 | ListParts | x |
 
+| Data Process | api |
+| --- | --- |
+| ?job_type=VideoSnapshots&media_jobs | ✅ |
+
+| qiniu | api |
+| --- | --- |
+| imageView2 | ✅ |
+| imageMogr2 | ✅ |
+
+
+
 ## Appendix
 * TOS Sign in Header https://www.volcengine.com/docs/6349/74839
 * TOS API https://www.volcengine.com/docs/6349/74837
