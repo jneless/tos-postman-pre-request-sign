@@ -96,7 +96,7 @@
 | GetBucketPolicy | x |
 | DeleteBucketPolicy | x |
 | PutBucketMirrorBack | x |
-| GetBucketMirrorBack | x |
+| GetBucketMirrorBack | ✅ |
 | DeleteBucketMirrorBack | x |
 | PutBucketReplication | x |
 | GetBucketReplication | x |
@@ -174,8 +174,9 @@
 | ?x-tos-process=image/crop | ✅ |
 | ?x-tos-process=image/resize | ✅ |
 | ?x-tos-process=video/info | ✅ |
-| ?x-tos-async-process (x-tos-async-process=audio/convert) | ✅ |
 | ?x-tos-process=video/snapshot | ✅ |
+| ?x-tos-async-process (x-tos-async-process=audio/convert) | ✅ |
+
 
 
 | qiniu | api |
@@ -189,3 +190,9 @@
 * TOS Sign in Header https://www.volcengine.com/docs/6349/74839
 * TOS API https://www.volcengine.com/docs/6349/74837
 * Thanks `Sibin Luo` for bug fixing
+
+
+## 常见 bug 说明
+* "There was an error in evaluating the Pre-request Script:TypeError: Cannot read properties of undefined (reading 'sigBytes')"
+    * 可能的原因 1 ：TOS 签名方式和 火山引擎默认签名 两者不同！如果出现该问题，通常是因为参考了火山签名方式，AK和SK明文被手动写入header，请手动删除header。将AK/SK通过 env 变量配置。
+    * 可能的原因 2 ：没有配置env，或者是 **配置env之后，新建的request默认env是空，没有手动在右上角切换该 env**
