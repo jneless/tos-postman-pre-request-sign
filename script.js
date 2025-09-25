@@ -1,124 +1,163 @@
-// —— 1. 基础变量 —— 
+// —— TOS4-HMAC-SHA256 签名脚本（优化版）——
+// 参考官方SDK实现，增强了路径编码、Headers处理和错误处理
+
+// —— 1. 基础变量（从环境变量获取）——
 const accessKey = pm.environment.get("accessKey");
 const secretKey = pm.environment.get("secretKey");
 const region    = pm.environment.get("region");
 const service   = pm.environment.get("service");  // 一般填 "tos"
 
-// —— 2. 时间戳 —— 
-const amzDate   = new Date().toISOString().replace(/[:-]|\.\d{3}/g, "");
-const dateStamp = amzDate.substr(0, 8);
-
-// —— 3. 方法 & URL 解析 —— 
-const method = pm.request.method.toUpperCase();      // GET / POST / HEAD 等
-// host 动态取自 URL
-const host   = pm.request.url.getHost();
-// path 也动态取
-const canonicalUri = pm.request.url.getPath() || "/";
-
-// 收集所有未禁用的 query 参数
-const params = pm.request.url.query.all().filter(p => !p.disabled);
-// 按 key 排序
-params.sort((a, b) => a.key.localeCompare(b.key));
-// 重新拼接并 encodeURIComponent
-
-const canonicalQueryString = params
-  .map(p => {
-  // 如果 p.value 是 undefined 或 null，就用空字符串
-  const v = (p.value == null) ? "" : p.value;
-  return `${encodeURIComponent(p.key)}=${encodeURIComponent(v)}`;
-}).join("&")
-
-// —— 4. 计算 payloadHash —— 
-let payloadHash;
-if (pm.request.body && pm.request.body.mode === 'raw') {
-  // raw 模式，计算实际 body 的 SHA256
-  const body = pm.request.body.raw;
-  payloadHash = CryptoJS.SHA256(body).toString(CryptoJS.enc.Hex);
-} else if (method === 'PUT') {
-  // file/formdata 上传场景，无法取内容时用 UNSIGNED-PAYLOAD
-  payloadHash = 'UNSIGNED-PAYLOAD';
-} else {
-  // GET/HEAD/其他无 body 场景
-  payloadHash = CryptoJS.SHA256("").toString(CryptoJS.enc.Hex);
+// 基础参数校验
+if (!accessKey || !secretKey || !region || !service) {
+    throw new Error("Missing required environment variables: accessKey, secretKey, region, service");
 }
 
-// —— 5. 插入签名前必要的 Header —— 
-pm.request.headers.upsert({ key: "x-tos-date",           value: amzDate });
+// —— 2. 时间戳生成（与官方SDK保持一致）——
+const now = new Date(new Date().toUTCString());
+const amzDate = now.toISOString().replace(/\..+/, '').replace(/-/g, '').replace(/:/g, '') + 'Z';
+const dateStamp = amzDate.substr(0, 8);
+
+// —— 3. HTTP方法和URL解析 ——
+const method = pm.request.method.toUpperCase();
+const host = pm.request.url.getHost();
+let canonicalUri = pm.request.url.getPath() || "/";
+
+// —— 4. 路径编码优化（参考官方SDK的getEncodePath方法）——
+function getEncodePath(path, encodeAll = true) {
+    if (!path) return '';
+
+    let tmpPath = path;
+    if (encodeAll) {
+        tmpPath = path.replace(/%2F/g, '/');
+    }
+    // 处理特殊字符，与官方SDK保持一致
+    tmpPath = tmpPath.replace(/\(/g, '%28');
+    tmpPath = tmpPath.replace(/\)/g, '%29');
+    tmpPath = tmpPath.replace(/!/g, '%21');
+    tmpPath = tmpPath.replace(/\*/g, '%2A');
+    tmpPath = tmpPath.replace(/\'/g, '%27');
+    return tmpPath;
+}
+
+// 应用路径编码
+canonicalUri = getEncodePath(canonicalUri);
+
+// —— 5. Query参数处理优化 ——
+const params = pm.request.url.query.all().filter(p => !p.disabled);
+// 按key排序（官方SDK要求）
+params.sort((a, b) => a.key.localeCompare(b.key));
+
+const canonicalQueryString = params.map(p => {
+    const key = encodeURIComponent(p.key || '');
+    const value = encodeURIComponent(p.value || '');
+    return `${key}=${value}`;
+}).join("&");
+
+// —— 6. Payload Hash计算 ——
+let payloadHash;
+if (pm.request.body && pm.request.body.mode === 'raw' && pm.request.body.raw) {
+    // raw模式，计算实际body的SHA256
+    payloadHash = CryptoJS.SHA256(pm.request.body.raw).toString(CryptoJS.enc.Hex);
+} else if (['PUT', 'POST'].includes(method) && pm.request.body &&
+           ['formdata', 'file'].includes(pm.request.body.mode)) {
+    // 文件上传或formdata，使用UNSIGNED-PAYLOAD
+    payloadHash = 'UNSIGNED-PAYLOAD';
+} else {
+    // GET/HEAD或无body情况
+    payloadHash = CryptoJS.SHA256("").toString(CryptoJS.enc.Hex);
+}
+
+// —— 7. 设置必要的Headers（优化版）——
+pm.request.headers.upsert({ key: "x-tos-date", value: amzDate });
 pm.request.headers.upsert({ key: "x-tos-content-sha256", value: payloadHash });
-pm.request.headers.upsert({ key: "host",                 value: host });
+pm.request.headers.upsert({ key: "host", value: host });
 
-// —— 6. 构造 Canonical Request —— 
-// 1) Gather all enabled headers whose names need signing
-let headersToSign = pm.request.headers
-  .all()
-  .filter(h => !h.disabled)
-  .filter(h => {
-    let name = h.key.toLowerCase();
-    // always include host / date / content-sha256
-    if (["host","x-tos-date","x-tos-content-sha256"].includes(name)) return true;
-    // include any custom x-tos-meta-* headers
-    return name.startsWith("x-tos-meta-");
-  });
+// —— 8. Headers处理优化（参考官方SDK的getNeedSignedHeaders）——
+function getNeedSignedHeaders(headers) {
+    const needSignHeaders = [];
+    headers.forEach(header => {
+        if (header.disabled) return;
 
-// 2) Sort by header name
-headersToSign.sort((a,b) => 
-  a.key.toLowerCase().localeCompare(b.key.toLowerCase())
-);
+        const key = header.key.toLowerCase();
+        // 必须包含的headers：host和所有x-tos-开头的headers
+        if (key === 'host' || key.startsWith('x-tos-')) {
+            if (header.value != null) {
+                needSignHeaders.push(header);
+            }
+        }
+    });
+    return needSignHeaders.sort((a, b) =>
+        a.key.toLowerCase().localeCompare(b.key.toLowerCase())
+    );
+}
 
-// 3) Build the canonical headers string
+// 获取需要签名的headers
+const headersToSign = getNeedSignedHeaders(pm.request.headers.all());
+
+// —— 9. Canonical Headers构建 ——
+function canonicalHeaderValues(value) {
+    // 标准化header值：压缩多个空格为单个空格，去除首尾空格
+    return value.replace(/\s+/g, ' ').replace(/^\s+|\s+$/g, '');
+}
+
 const canonicalHeaders = headersToSign
-  .map(h => `${h.key.toLowerCase()}:${h.value.trim()}\n`)
-  .join("");
+    .map(h => `${h.key.toLowerCase()}:${canonicalHeaderValues(h.value)}\n`)
+    .join("");
 
-// 4) Build the signed headers list
 const signedHeaders = headersToSign
-  .map(h => h.key.toLowerCase())
-  .join(";");
+    .map(h => h.key.toLowerCase())
+    .join(";");
 
-// 5) Assemble the canonical request
+// —— 10. 构造Canonical Request ——
 const canonicalRequest = [
-  method,
-  canonicalUri,
-  canonicalQueryString,
-  canonicalHeaders,
-  signedHeaders,
-  payloadHash
+    method,
+    canonicalUri,
+    canonicalQueryString,
+    canonicalHeaders,
+    signedHeaders,
+    payloadHash
 ].join("\n");
 
-
-// —— 7. 构造 StringToSign —— 
-const algorithm       = "TOS4-HMAC-SHA256";
+// —— 11. 构造String to Sign ——
+const algorithm = "TOS4-HMAC-SHA256";
 const credentialScope = `${dateStamp}/${region}/${service}/request`;
-const hashCR          = CryptoJS.SHA256(canonicalRequest).toString(CryptoJS.enc.Hex);
-const stringToSign    = [
-  algorithm,
-  amzDate,
-  credentialScope,
-  hashCR
+const hashCR = CryptoJS.SHA256(canonicalRequest).toString(CryptoJS.enc.Hex);
+const stringToSign = [
+    algorithm,
+    amzDate,
+    credentialScope,
+    hashCR
 ].join("\n");
 
-// —— 8. 派生签名密钥 & 计算签名 —— 
-const kDate    = CryptoJS.HmacSHA256(dateStamp,     secretKey);
-const kRegion  = CryptoJS.HmacSHA256(region,        kDate);
-const kService = CryptoJS.HmacSHA256(service,       kRegion);
-const kSigning = CryptoJS.HmacSHA256("request",     kService);
+// —— 12. 派生签名密钥（与官方SDK相同的四步派生）——
+const kDate = CryptoJS.HmacSHA256(dateStamp, secretKey);
+const kRegion = CryptoJS.HmacSHA256(region, kDate);
+const kService = CryptoJS.HmacSHA256(service, kRegion);
+const kSigning = CryptoJS.HmacSHA256("request", kService);
 
+// —— 13. 计算最终签名 ——
 const signature = CryptoJS.HmacSHA256(stringToSign, kSigning).toString(CryptoJS.enc.Hex);
 
-// —— 9. 注入 Authorization —— 
-const authHeader = 
-  `${algorithm} ` +
-  `Credential=${accessKey}/${credentialScope}, ` +
-  `SignedHeaders=${signedHeaders}, ` +
-  `Signature=${signature}`;
+// —— 14. 构造并设置Authorization Header ——
+const authHeader =
+    `${algorithm} ` +
+    `Credential=${accessKey}/${credentialScope}, ` +
+    `SignedHeaders=${signedHeaders}, ` +
+    `Signature=${signature}`;
+
 pm.request.headers.upsert({ key: "Authorization", value: authHeader });
 
-// —— 10. 调试日志 —— 
-console.log("▶ method:", method);
-console.log("▶ host:", host);
-console.log("▶ canonicalUri:", canonicalUri);
-console.log("▶ canonicalQueryString:", canonicalQueryString);
-console.log("▶ canonicalRequest:\n", canonicalRequest);
-console.log("▶ stringToSign:\n", stringToSign);
-console.log("▶ kSigning (hex):", kSigning.toString(CryptoJS.enc.Hex));
-console.log("▶ Authorization:", authHeader);
+// —— 15. 调试日志（详细版）——
+console.log("=== TOS Signature Debug Info ===");
+console.log("▶ Method:", method);
+console.log("▶ Host:", host);
+console.log("▶ Canonical URI:", canonicalUri);
+console.log("▶ Canonical Query String:", canonicalQueryString);
+console.log("▶ Signed Headers:", signedHeaders);
+console.log("▶ Payload Hash:", payloadHash);
+console.log("▶ Canonical Request:\n", canonicalRequest);
+console.log("▶ String to Sign:\n", stringToSign);
+console.log("▶ Signing Key (hex):", kSigning.toString(CryptoJS.enc.Hex));
+console.log("▶ Signature:", signature);
+console.log("▶ Authorization Header:", authHeader);
+console.log("=== End Debug Info ===");
