@@ -1,5 +1,6 @@
-# Volc-TOS unofficial pre-request script for Postman
+# Volc-TOS pre-request script for Postman
 
+* 火山引擎 TOS 的 postman 签名工具，可以使用该脚本在 postman 中构造请求，从而访问 TOS 中存储的私有文件
 * It is possible to allow private files to be accessed through AK/SK, so as to use various APIs of the TOS protocol.
 
 ## Step
