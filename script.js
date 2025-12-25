@@ -19,7 +19,8 @@ const dateStamp = amzDate.substr(0, 8);
 
 // —— 3. HTTP方法和URL解析 ——
 const method = pm.request.method.toUpperCase();
-const host = pm.request.url.getHost();
+// const host = pm.request.url.getHost();
+const host = pm.variables.replaceIn(pm.request.url.getHost());
 let canonicalUri = pm.request.url.getPath() || "/";
 
 // —— 4. 路径编码优化（参考官方SDK的getEncodePath方法）——
