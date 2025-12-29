@@ -16,9 +16,13 @@
 2. 创建一个请求，并且在右上角选择对应的 【env】
 3. 在 [scripts] - [pre-sign] 中粘贴签名脚本
 
-## 参考
-* tos vectors public postman
-* https://www.postman.com/telecoms-explorer-65390521/volc-tos-vectors/collection/34501207-3a0098ab-d18d-46ca-ac92-2fa3e219d767/?action=share&creator=34501207&active-environment=34501207-51e8760c-870c-4114-adda-7ae60d4b3c34
+## Postman 示例
+
+* tos 签名脚本 postman 示例
+* https://www.postman.com/telecoms-explorer-65390521/workspace/volcengine-tos/collection/34501207-4231b4a0-0d18-49c7-925f-4f670548d114?action=share&source=copy-link&creator=34501207
+* --
+* tos vectors 签名脚本 postman 示例
+* https://www.postman.com/telecoms-explorer-65390521/workspace/volcengine-tos-vectors/collection/34501207-3a0098ab-d18d-46ca-ac92-2fa3e219d767?action=share&source=copy-link&creator=34501207
 
 
 ## 提示
