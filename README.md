@@ -195,7 +195,14 @@
 * Thanks `Sibin Luo` for bug fixing
 
 
-## 常见 bug 说明
-* "There was an error in evaluating the Pre-request Script:TypeError: Cannot read properties of undefined (reading 'sigBytes')"
+## 常见问题说明
+1. "There was an error in evaluating the Pre-request Script:TypeError: Cannot read properties of undefined (reading 'sigBytes')"
     * 可能的原因 1 ：TOS 签名方式和 火山引擎默认签名 两者不同！如果出现该问题，通常是因为参考了火山签名方式，AK和SK明文被手动写入header，请手动删除header。将AK/SK通过 env 变量配置。
     * 可能的原因 2 ：没有配置env，或者是 **配置env之后，新建的request默认env是空，没有手动在右上角切换该 env**
+
+2. 签名脚本 自动注入的参数，如果在 header 中显示声明，但处于非勾选状态，postman 会认为参数被**手动强制**置为 null，导致请求失败。如非特别构造特殊请求，请勿手动在 header 中包含这些参数。包含：
+    * `host`
+    * `x-tos-data`
+    * `x-tos-content-sha265`
+    * `Authorization`
+![image](./doc/img/3.png)

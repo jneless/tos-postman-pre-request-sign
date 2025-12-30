@@ -162,3 +162,6 @@ console.log("▶ Signing Key (hex):", kSigning.toString(CryptoJS.enc.Hex));
 console.log("▶ Signature:", signature);
 console.log("▶ Authorization Header:", authHeader);
 console.log("=== End Debug Info ===");
+
+// 特别注意
+// 签名脚本自动注入的参数，如果在 header 中显示声明，但处于非勾选状态，postman 会认为参数被**手动强制**置为 null，导致请求失败。如非特别构造特殊请求，请勿手动在 header 中包含这些参数。
