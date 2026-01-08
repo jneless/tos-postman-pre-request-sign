@@ -206,3 +206,6 @@
     * `x-tos-content-sha265`
     * `Authorization`
 ![image](./doc/img/3.png)
+
+3. base64 url 对于 【+】的特殊处理
+    * 因 url 中将  【+】 认为空格，故无法对【+】进行处理，tos 请求中均使用 base64-url safe 进行处理，故该签名脚本并不处理【+】符号
