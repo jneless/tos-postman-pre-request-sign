@@ -184,6 +184,12 @@
 | ?x-tos-async-process (x-tos-async-process=audio/convert) | ✅ |
 
 
+| AI | api |
+| --- | --- |
+| ?x-tos-process=image/understanding | ✅ |
+| ?x-tos-process=video/understanding | ✅ |
+
+
 | qiniu | api |
 | --- | --- |
 | imageView2 | ✅ |
